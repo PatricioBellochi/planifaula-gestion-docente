@@ -1,0 +1,1 @@
+# PlanifAula - Sistema de Gestión Docente (Avance 60%)
