@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ espacio.materia }} — PlanifAula</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-900 font-sans">
+    <main class="max-w-5xl mx-auto p-6 space-y-6">
+        <a href="/" class="text-sm text-blue-900 hover:underline">← Volver al Panel Principal</a>
+        
+        <div class="bg-white p-6 rounded-xl border border-slate-200">
+            <h1 class="text-2xl font-bold">{{ espacio.curso }} — {{ espacio.materia }}</h1>
+            <p class="text-slate-500 text-sm">{{ espacio.institucion }} • Turno {{ espacio.turno }} • Ciclo {{ espacio.ciclo_lectivo }}</p>
+        </div>
+
+        <!-- Formulario Nueva Unidad -->
+        <form action="/unidad/nueva/{{ espacio.id }}" method="POST" class="bg-white p-6 rounded-xl border border-slate-200 space-y-3">
+            <h2 class="font-semibold">Agregar Unidad Didáctica</h2>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                <input type="number" name="numero" placeholder="N° Unidad" required class="border p-2 rounded">
+                <input name="titulo" placeholder="Título de la Unidad" required class="md:col-span-3 border p-2 rounded">
+            </div>
+            <textarea name="objetivos" placeholder="Objetivos de aprendizaje..." class="w-full border p-2 rounded"></textarea>
+            <button class="bg-blue-900 text-white px-4 py-2 rounded-lg text-sm">+ Crear Unidad</button>
+        </form>
+
+        <!-- Listado de Unidades y sus Clases -->
+        {% for u in espacio.unidades %}
+        <div class="bg-white p-6 rounded-xl border border-slate-200 space-y-4">
+            <div class="border-b pb-3">
+                <h3 class="font-bold text-lg text-blue-900">Unidad {{ u.numero }}: {{ u.titulo }}</h3>
+                <p class="text-sm text-slate-600 mt-1">{{ u.objetivos }}</p>
+            </div>
+
+            <!-- Form agregar clase a esta unidad -->
+            <form action="/clase/nueva/{{ u.id }}" method="POST" class="grid grid-cols-1 md:grid-cols-4 gap-2 bg-slate-50 p-3 rounded-lg">
+                <input type="date" name="fecha" required class="border p-2 rounded text-sm">
+                <input name="tema" placeholder="Tema de la clase" required class="border p-2 rounded text-sm">
+                <select name="recurso_id" class="border p-2 rounded text-sm">
+                    <option value="">-- Vincular recurso (opcional) --</option>
+                    {% for r in recursos %}
+                    <option value="{{ r.id }}">{{ r.titulo }} ({{ r.tipo }})</option>
+                    {% endfor %}
+                </select>
+                <button class="bg-slate-800 text-white px-3 py-2 rounded text-sm">+ Agregar Clase</button>
+            </form>
+
+            <ul class="divide-y">
+                {% for c in u.clases %}
+                <li class="py-2 flex justify-between items-center text-sm">
+                    <span><strong>{{ c.fecha }}</strong> — {{ c.tema }}</span>
+                    <span class="px-2 py-0.5 rounded text-xs bg-slate-100">{{ c.estado }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endfor %}
+    </main>
+</body>
+</html>

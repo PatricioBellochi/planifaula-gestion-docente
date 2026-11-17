@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PlanifAula — Panel Docente</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-900 font-sans">
+    <nav class="bg-white border-b border-slate-200 px-6 py-4 flex justify-between items-center">
+        <span class="font-bold text-xl text-blue-900">PlanifAula</span>
+        <span class="text-sm text-slate-500">Ciclo Lectivo 2026 • Avance del Sistema: 60%</span>
+    </nav>
+
+    <main class="max-w-6xl mx-auto p-6 space-y-8">
+        <!-- Resumen KPI -->
+        <section class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="bg-white p-5 rounded-xl border border-slate-200">
+                <p class="text-sm text-slate-500">Espacios Curriculares</p>
+                <p class="text-2xl font-bold text-blue-900">{{ espacios|length }} cursos</p>
+            </div>
+            <div class="bg-white p-5 rounded-xl border border-slate-200">
+                <p class="text-sm text-slate-500">Clases Dictadas</p>
+                <p class="text-2xl font-bold text-emerald-600">{{ total_dictadas }} clases</p>
+            </div>
+            <div class="bg-white p-5 rounded-xl border border-slate-200">
+                <p class="text-sm text-slate-500">Banco de Recursos</p>
+                <p class="text-2xl font-bold text-slate-800">{{ recursos|length }} materiales</p>
+            </div>
+        </section>
+
+        <!-- Alta rápida de Espacio Curricular y Recurso -->
+        <section class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <form action="/espacio/nuevo" method="POST" class="bg-white p-6 rounded-xl border border-slate-200 space-y-3">
+                <h2 class="font-semibold text-lg">Nuevo Espacio Curricular</h2>
+                <input name="institucion" placeholder="Institución (ej. EES N° 28)" required class="w-full border p-2 rounded">
+                <div class="grid grid-cols-3 gap-2">
+                    <input name="materia" placeholder="Materia" required class="border p-2 rounded">
+                    <input name="curso" placeholder="Curso (ej. 3° B)" required class="border p-2 rounded">
+                    <input name="turno" placeholder="Turno" required class="border p-2 rounded">
+                </div>
+                <button class="bg-blue-900 text-white px-4 py-2 rounded-lg text-sm font-medium">+ Guardar Materia</button>
+            </form>
+
+            <form action="/recurso/nuevo" method="POST" class="bg-white p-6 rounded-xl border border-slate-200 space-y-3">
+                <h2 class="font-semibold text-lg">Subir al Banco de Recursos</h2>
+                <input name="titulo" placeholder="Título del material (ej. Guía Bucles)" required class="w-full border p-2 rounded">
+                <div class="grid grid-cols-2 gap-2">
+                    <select name="tipo" class="border p-2 rounded">
+                        <option value="PDF">PDF</option>
+                        <option value="Enlace">Enlace</option>
+                        <option value="Consigna">Consigna</option>
+                    </select>
+                    <input name="etiquetas" placeholder="Etiquetas (ej. python, u2)" class="border p-2 rounded">
+                </div>
+                <input name="ruta_o_url" placeholder="URL o nombre de archivo" required class="w-full border p-2 rounded">
+                <button class="bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-medium">+ Guardar Recurso</button>
+            </form>
+        </section>
+
+        <!-- Listado de Materias -->
+        <section class="bg-white p-6 rounded-xl border border-slate-200">
+            <h2 class="font-semibold text-lg mb-4">Mis Espacios Curriculares</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {% for e in espacios %}
+                <a href="/espacio/{{ e.id }}" class="block p-4 border rounded-lg hover:border-blue-900 transition">
+                    <span class="text-xs bg-blue-50 text-blue-900 px-2 py-1 rounded">{{ e.institucion }}</span>
+                    <h3 class="font-bold mt-2">{{ e.curso }} — {{ e.materia }}</h3>
+                    <p class="text-sm text-slate-500">Turno {{ e.turno }} • {{ e.unidades|length }} unidades</p>
+                </a>
+                {% else %}
+                <p class="text-sm text-slate-500">Aún no hay materias cargadas.</p>
+                {% endfor %}
+            </div>
+        </section>
+
+        <!-- Cronograma de Próximas Clases -->
+        <section class="bg-white p-6 rounded-xl border border-slate-200 space-y-3">
+            <h2 class="font-semibold text-lg">Cronograma de Clases</h2>
+            {% for c in clases %}
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center p-4 border rounded-lg gap-3">
+                <div>
+                    <span class="text-xs font-semibold text-blue-900">{{ c.fecha }} • {{ c.unidad.espacio.curso }} ({{ c.unidad.espacio.materia }})</span>
+                    <h3 class="font-medium">{{ c.tema }}</h3>
+                    {% for r in c.recursos %}
+                    <span class="inline-block text-xs bg-slate-100 px-2 py-0.5 rounded mt-1">📎 {{ r.titulo }}</span>
+                    {% endfor %}
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-xs px-2.5 py-1 rounded-full font-medium
+                        {% if c.estado == 'Dictada' %}bg-emerald-100 text-emerald-800
+                        {% elif c.estado == 'Reprogramada' %}bg-amber-100 text-amber-800
+                        {% else %}bg-sky-100 text-sky-800{% endif %}">
+                        {{ c.estado }}
+                    </span>
+                    <a href="/clase/estado/{{ c.id }}/Dictada" class="text-xs bg-emerald-600 text-white px-3 py-1.5 rounded">✓ Dictada</a>
+                    <a href="/clase/estado/{{ c.id }}/Reprogramada" class="text-xs bg-amber-500 text-white px-3 py-1.5 rounded">↻ Reprogramar</a>
+                </div>
+            </div>
+            {% else %}
+            <p class="text-sm text-slate-500">No hay clases registradas todavía.</p>
+            {% endfor %}
+        </section>
+    </main>
+</body>
+</html>
